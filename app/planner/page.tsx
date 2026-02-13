@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Bot } from "lucide-react";
 import { useState } from "react";
+import Navbar from "../components/Navbar";
 
 export default function WorkspacePage() {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function WorkspacePage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatedResult, setGeneratedResult] = useState("");
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -26,20 +28,47 @@ export default function WorkspacePage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setGeneratedResult(""); // Clear previous results
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Form submitted:", formData);
-      // Handle form submission here
+    try {
+      // Construct a structured prompt from the form data
+      const prompt = `
+        Project Goal: ${formData.featureGoal}
+        Target Users: ${formData.targetUsers}
+        Constraints: ${formData.constraints}
+        Template Type: ${formData.templateType}
+        
+        Please generate a comprehensive list of user stories and engineering tasks based on these requirements.
+      `;
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate tasks");
+      }
+
+      const data = await response.json();
+      setGeneratedResult(data.text);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      // Optionally handle UI error state here
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 pt-24 pb-12 px-4">
+      <Navbar />
       {/* Minimal Contained Glow Background */}
       <motion.div
         animate={{ scale: [1, 1.08, 1], opacity: [0.2, 0.35, 0.2] }}
@@ -173,6 +202,30 @@ export default function WorkspacePage() {
             </motion.button>
           </form>
         </motion.div>
+
+        {/* Render Generated Response in Nice Comment Box */}
+        {generatedResult && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mt-8 p-8 glass rounded-2xl border border-gray-200 dark:border-blue-500/20 shadow-lg dark:shadow-blue-500/5 bg-white/50 dark:bg-slate-900/50"
+          >
+            <div className="flex items-center gap-3 mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Bot className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                Generated Plan
+              </h3>
+            </div>
+            <div className="prose dark:prose-invert max-w-none">
+              <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed font-mono text-sm">
+                {generatedResult}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Info Section */}
         <motion.div
