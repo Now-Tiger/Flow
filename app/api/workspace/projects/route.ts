@@ -4,6 +4,7 @@
 import { supabaseClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// List projects of the logged user
 export async function GET(request: NextRequest) {
   try {
     const userId = request.cookies.get("user_id")?.value;
@@ -48,6 +49,59 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ projects: formattedProjects }, { status: 200 });
   } catch (error) {
     console.error("Get projects error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+// Create a project
+export async function POST(request: NextRequest) {
+  try {
+    const userId = request.cookies.get("user_id")?.value;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { title, description, targetUsers, constraints, templateType } =
+      await request.json();
+
+    if (!title || !description) {
+      return NextResponse.json(
+        { error: "Title and description are required" },
+        { status: 400 },
+      );
+    }
+
+    // Create project
+    const { data: project, error } = await supabaseClient
+      .from("projects")
+      .insert([
+        {
+          user_id: userId,
+          title,
+          description,
+          target_users: targetUsers || "",
+          constraints: constraints || "",
+          template_type: templateType || "Web Application",
+          status: "draft",
+        },
+      ])
+      .select();
+
+    if (error) {
+      console.error("Database error:", error);
+      return NextResponse.json(
+        { error: "Failed to create project" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ project: project[0] }, { status: 201 });
+  } catch (error) {
+    console.error("Create project error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
