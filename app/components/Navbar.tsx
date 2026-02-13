@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Laptop, SquareDashedMousePointer } from "lucide-react";
+import { Moon, Sun, Laptop, Sparkles } from "lucide-react";
 import { useTheme } from "next-themes";
 
 /**
@@ -25,7 +25,7 @@ export default function Navbar() {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "App", href: "/flow" },
+    // { name: "App", href: "/flow" },
     { name: "Features", href: "/#features" },
     { name: "Why Us", href: "/#why" },
   ];
@@ -35,7 +35,7 @@ export default function Navbar() {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/10 dark:bg-purple-900/20 border-b border-purple-500/20"
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/10 dark:bg-transparent border-b border-purple-500/20"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -46,8 +46,8 @@ export default function Navbar() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 bg-linear-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold">
-              <SquareDashedMousePointer />
+            <div className="p-2 bg-blue-600 rounded-lg ">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg bg-linear-to-r text-blue-700 dark:text-blue-300 bg-clip-text font-extrabold">
               Flow
@@ -111,7 +111,7 @@ export default function Navbar() {
               </AnimatePresence>
             </button>
 
-            <a href="/planner">
+            <a href="/auth">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

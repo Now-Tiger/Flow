@@ -64,7 +64,7 @@ export function Hero() {
           transition={{ duration: 0.7, delay: 0.3 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
         >
-          <Link href="/flow">
+          <Link href="/auth">
             <motion.button
               whileHover={{
                 scale: 1.05,
