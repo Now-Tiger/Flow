@@ -3,7 +3,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TaskGenius - Turn Ideas Into Actionable Tasks",
+  title: "Flow::App",
   description:
     "A minimalist productivity tool for engineers and founders. Generate structured task breakdowns with AI, organize with drag-and-drop, and export instantly.",
   keywords: [
@@ -14,9 +14,10 @@ export const metadata: Metadata = {
     "engineers",
     "founders",
   ],
-  authors: [{ name: "TaskGenius" }],
+  icons: { icon: "./neko.png" },
+  authors: [{ name: "Tiger" }],
   openGraph: {
-    title: "TaskGenius",
+    title: "Flow:App",
     description: "Turn Ideas Into Actionable Tasks",
     type: "website",
   },
@@ -29,8 +30,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <body className="dark:bg-slate-800">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <main className="relative overflow-hidden">{children}</main>
         </ThemeProvider>
       </body>
