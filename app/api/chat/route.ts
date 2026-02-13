@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
     // 2. Initialize the OpenRouter provider
     const openrouter = createOpenRouter({
-      apiKey: process.env.openrouter,
+      apiKey: process.env.OPENROUTER_KEY,
     });
 
     // 3. Call the AI model
