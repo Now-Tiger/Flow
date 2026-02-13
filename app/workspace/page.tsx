@@ -124,9 +124,9 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-700 dark:to-slate-700">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-500/10 dark:to-slate-500/10">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white/80 dark:bg-transparent backdrop-blur-md border-b border-blue-300 dark:border-transparent">
+      <div className="sticky top-0 z-50 bg-white/80 dark:bg-transparent backdrop-blur-md border-b border-purple-500/20 dark:border-transparent">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Left: Logo & Title */}
@@ -217,7 +217,7 @@ export default function WorkspacePage() {
                     {projects.length}
                   </p>
                 </div>
-                <Folder className="w-10 h-10 text-blue-600/20" />
+                <Folder className="w-10 h-10 text-blue-600/20 dark:text-slate-300/30" />
               </div>
             </CardContent>
           </Card>
@@ -233,7 +233,7 @@ export default function WorkspacePage() {
                     {projects.reduce((sum, p) => sum + p.taskCount, 0)}
                   </p>
                 </div>
-                <BarChart3 className="w-10 h-10 text-green-600/20" />
+                <BarChart3 className="w-10 h-10 text-green-600/20 dark:text-slate-300/30" />
               </div>
             </CardContent>
           </Card>
@@ -257,7 +257,7 @@ export default function WorkspacePage() {
                     )}
                   </p>
                 </div>
-                <Clock className="w-10 h-10 text-purple-600/20" />
+                <Clock className="w-10 h-10 text-purple-600/20 dark:text-slate-300/30" />
               </div>
             </CardContent>
           </Card>

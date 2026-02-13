@@ -168,7 +168,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 px-4 py-8">
+    <div className="relative min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-500/10 dark:to-slate-500/10 px-4 py-8">
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
