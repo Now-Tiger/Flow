@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Laptop } from "lucide-react";
+import { Moon, Sun, Laptop, SquareDashedMousePointer } from "lucide-react";
 import { useTheme } from "next-themes";
 
 /**
@@ -25,7 +25,7 @@ export default function Navbar() {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "App", href: "/planner" },
+    { name: "App", href: "/flow" },
     { name: "Features", href: "/#features" },
     { name: "Why Us", href: "/#why" },
   ];
@@ -46,8 +46,8 @@ export default function Navbar() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 bg-linear-to-br from-blue-500 via-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold">
-              F
+            <div className="w-8 h-8 bg-linear-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold">
+              <SquareDashedMousePointer />
             </div>
             <span className="text-lg bg-linear-to-r text-blue-700 dark:text-blue-300 bg-clip-text font-extrabold">
               Flow

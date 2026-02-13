@@ -54,7 +54,7 @@ export function CTA() {
             viewport={{ once: true }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link href="/planner">
+            <Link href="/flow">
               <motion.button
                 whileHover={{
                   scale: 1.05,
