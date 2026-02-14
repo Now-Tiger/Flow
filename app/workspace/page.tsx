@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // Added AnimatePresence
 import {
   Search,
   Plus,
@@ -12,11 +12,13 @@ import {
   Clock,
   BarChart3,
   Sparkles,
+  CheckCircle, // Added CheckCircle for the banner
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import ThemeTogger from "../components/ThemeTogger";
 import type { UserInfo } from "@/types/common";
+import { DeleteProjectButton } from "@/components/ui/deleteProjectButton";
 
 interface Project {
   id: string;
@@ -27,6 +29,12 @@ interface Project {
   task_groups: number;
 }
 
+interface Stats {
+  totalProjects: number;
+  totalTasks: number;
+  recentProjects: number;
+}
+
 export default function WorkspacePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -35,6 +43,10 @@ export default function WorkspacePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  const [successMessage, setSuccessMessage] = useState("");
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
 
   // Fetch user data and projects
   useEffect(() => {
@@ -79,7 +91,7 @@ export default function WorkspacePage() {
       const filtered = projects.filter(
         (project) =>
           project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.description.toLowerCase().includes(searchQuery.toLowerCase()),
+          project.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredProjects(filtered);
     }
@@ -102,6 +114,56 @@ export default function WorkspacePage() {
     });
   };
 
+  // Handle project deletion
+  const handleDeleteProject = async (projectId: string): Promise<void> => {
+    setDeletingProjectId(projectId);
+
+    try {
+      const response = await fetch(
+        `/api/workspace/projects/${projectId}/delete`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete project");
+      }
+
+      const data = await response.json();
+
+      // Remove from local state
+      const updatedProjects = projects.filter((p) => p.id !== projectId);
+      setProjects(updatedProjects);
+      // Also update filtered projects to reflect change immediately if searching
+      setFilteredProjects((prev) => prev.filter((p) => p.id !== projectId));
+
+      // Update stats
+      setStats((prev) =>
+        prev
+          ? {
+              ...prev,
+              totalProjects: Math.max(0, prev.totalProjects - 1),
+            }
+          : prev
+      );
+
+      // Show success message
+      setSuccessMessage("Project deleted successfully"); // Set explicit message or use data.message
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (err) {
+      console.error("Error deleting project:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete project";
+      setError(errorMessage);
+      setTimeout(() => setError(""), 4000);
+    } finally {
+      setDeletingProjectId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900">
@@ -116,7 +178,7 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-500/10 dark:to-slate-500/10">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-500/10 dark:to-slate-500/10 relative">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white/80 dark:bg-transparent backdrop-blur-md border-b border-purple-500/20 dark:border-transparent">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
@@ -164,6 +226,23 @@ export default function WorkspacePage() {
           </div>
         </div>
       </div>
+
+      {/* Success Notification Banner */}
+      <AnimatePresence>
+        {successMessage && (
+          <div className="fixed top-24 left-0 right-0 z-50 flex justify-center pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 pointer-events-auto backdrop-blur-sm"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">{successMessage}</span>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -236,7 +315,7 @@ export default function WorkspacePage() {
                           (1000 * 60 * 60 * 24);
                         return days <= 7;
                       }).length,
-                      9,
+                      9
                     )}
                   </p>
                 </div>
@@ -363,6 +442,21 @@ export default function WorkspacePage() {
                               {project.task_groups}{" "}
                               {project.task_groups === 1 ? "group" : "groups"}
                             </span>
+                            
+                            {/* Prevent Link navigation when clicking delete */}
+                            <div
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                            >
+                              <DeleteProjectButton
+                                projectId={project.id}
+                                projectTitle={project.title}
+                                onDelete={handleDeleteProject}
+                                isLoading={deletingProjectId === project.id}
+                              />
+                            </div>
                           </div>
                         </div>
                       </CardContent>
