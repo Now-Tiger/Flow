@@ -2,13 +2,15 @@
 
 **AI-powered task planning tool that transforms your feature ideas into actionable project breakdowns in seconds.**
 
+![image](./public/homepage.png)
+
 Flow is like having an expert project manager in your pocket. Simply describe your feature goal, and let Claude AI instantly generate organized user stories, engineering tasks, and risks. Edit, reorder, group, and export your tasks seamlessly.
 
 ---
 
 ## 📋 Table of Contents
 
-- [What is Flow?](#what-is-taskgenius)
+- [What is Flow?](#what-is-flow)
 - [Getting Started](#getting-started)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -434,7 +436,7 @@ This project is licensed under the MIT License - see LICENSE file for details.
 
 ## Acknowledgments
 
-- **Language Model** - Gemini language model from openrouter
+- **Language Model** - free language models from openrouter
 - **Next.js** - React framework
 - **Tailwind CSS** - Utility-first CSS
 - **Framer Motion** - Animation library
