@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, House, Moon, Sparkles, Sun } from "lucide-react";
+import { Eye, EyeOff, House, Sparkles } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,13 +12,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { useTheme } from "next-themes";
+import ThemeTogger from "../components/ThemeTogger";
 
 type AuthMode = "login" | "signup";
 
 export default function AuthPage() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
 
   const [mode, setMode] = useState<AuthMode>("login");
   const [isLoading, setIsLoading] = useState(false);
@@ -169,19 +168,8 @@ export default function AuthPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-500/10 dark:to-slate-500/10 px-4 py-8">
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95"
-          aria-label="Toggle Theme"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5 text-gray-300" />
-          ) : (
-            <Moon className="w-5 h-5 text-gray-600" />
-          )}
-        </button>
-
+      <div className="absolute top-4 right-4 flex items-center gap-2 px-30">
+        <ThemeTogger />
         <button className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
           <Link href={"/"}>
             <House className="w-5 h-5 text-gray-600 dark:text-gray-300" />
