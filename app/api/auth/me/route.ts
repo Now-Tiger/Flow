@@ -2,12 +2,8 @@
 // File: app/api/auth/me/route.ts
 // ============================================================================
 
-import { createClient } from "@supabase/supabase-js";
+import { supabaseClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user from database
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabaseClient
       .from("users")
       .select("id, email, first_name, last_name, created_at")
       .eq("id", userId)
