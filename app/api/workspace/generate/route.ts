@@ -103,7 +103,7 @@ Important:
     // 3. Call the AI model
     // We use a specific model optimized for instruction following.
     const { text } = await generateText({
-      model: openrouter("google/gemini-2.0-flash-001"),
+      model: openrouter("nvidia/nemotron-3-nano-30b-a3b:free"),
       prompt: prompt,
     });
 
