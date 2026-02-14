@@ -66,7 +66,7 @@ cp .env.local.example .env.local
 # OPENROUTER_KEY=your_anthropic_key
 
 # 5. Create database tables
-# Run SQL from supabase_schema.sql in your Supabase dashboard
+# Run SQL from ./migrations/000_flow_app_schemas.sql.in your Supabase dashboard or sql editor
 
 # 6. Start development server
 npm run dev
@@ -100,7 +100,7 @@ yarn install
 1. Create account at [supabase.com](https://supabase.com)
 2. Create new project
 3. Go to SQL Editor
-4. Copy and run the schema from `supabase_schema.sql`
+4. Copy and run the schema from `migrations/000_flow_app_schemas.sql`
 5. Get your credentials:
    - URL: Settings > API > Project URL
    - Service Role Key: Settings > API > Project API Keys
