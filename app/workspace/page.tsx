@@ -11,13 +11,12 @@ import {
   FileText,
   Clock,
   BarChart3,
-  Moon,
-  Sun,
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { useTheme } from "next-themes";
+import ThemeTogger from "../components/ThemeTogger";
+import type { UserInfo } from "@/types/common"
 
 interface Project {
   id: string;
@@ -28,16 +27,10 @@ interface Project {
   task_groups: number;
 }
 
-interface User {
-  email: string;
-  first_name: string;
-  last_name: string;
-}
 
 export default function WorkspacePage() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserInfo | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -147,18 +140,7 @@ export default function WorkspacePage() {
             {/* Right: User & Logout */}
             <div className="flex items-center gap-4">
               {/* Theme toggler */}
-              <button
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95"
-                aria-label="Toggle Theme"
-              >
-                {theme === "dark" ? (
-                  <Sun className="w-5 h-5 text-gray-300" />
-                ) : (
-                  <Moon className="w-5 h-5 text-gray-600" />
-                )}
-              </button>
-
+              <ThemeTogger />
               {user && (
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -285,7 +267,7 @@ export default function WorkspacePage() {
 
             {/* Create New Project Button */}
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link href="/workspace/new">
+              <Link href="/flow">
                 <button className="flex items-center gap-2 px-6 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 whitespace-nowrap">
                   <Plus className="w-5 h-5" />
                   New Project
@@ -327,7 +309,7 @@ export default function WorkspacePage() {
                     : "Try adjusting your search terms"}
                 </p>
                 {projects.length === 0 && (
-                  <Link href="/workspace/new">
+                  <Link href="/flow">
                     <button className="inline-flex items-center gap-2 px-6 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300">
                       <Plus className="w-5 h-5" />
                       Create Your First Project
