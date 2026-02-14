@@ -54,7 +54,7 @@ export function CTA() {
             viewport={{ once: true }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link href="/flow">
+            <Link href="/auth">
               <motion.button
                 whileHover={{
                   scale: 1.05,
@@ -69,7 +69,7 @@ export function CTA() {
             </Link>
 
             <motion.a
-              href="/planner"
+              href="/auth"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 glass hover:glass-glow text-gray-200 font-semibold rounded-lg transition-all duration-300 cursor-pointer min-w-fit"

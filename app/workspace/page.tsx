@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import ThemeTogger from "../components/ThemeTogger";
-import type { UserInfo } from "@/types/common"
+import type { UserInfo } from "@/types/common";
 
 interface Project {
   id: string;
@@ -26,7 +26,6 @@ interface Project {
   taskCount: number;
   task_groups: number;
 }
-
 
 export default function WorkspacePage() {
   const router = useRouter();
@@ -125,10 +124,12 @@ export default function WorkspacePage() {
             {/* Left: Logo & Title */}
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-600 rounded-lg">
-                <Sparkles className="w-5 h-5 text-white" />
+                <Link href={"/"}>
+                  <Sparkles className="w-5 h-5 text-white" />
+                </Link>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-xl font-bold text-blue-700 dark:text-blue-300">
                   Flow
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
