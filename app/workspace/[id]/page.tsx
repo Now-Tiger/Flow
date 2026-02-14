@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
   ArrowLeft,
   Download,
@@ -13,6 +13,7 @@ import {
   Loader,
   CheckCircle,
   AlertCircle,
+  GripVertical,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -58,7 +59,6 @@ interface Stats {
 
 export default function ProjectDetailsPage() {
   const params = useParams();
-  // const router = useRouter();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
@@ -71,11 +71,13 @@ export default function ProjectDetailsPage() {
     {},
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
 
   // Fetch project details
   useEffect(() => {
-    const fetchProjectDetails = async () => {
+    const fetchProjectDetails = async (): Promise<void> => {
       try {
         setIsLoading(true);
         const response = await fetch(
@@ -110,8 +112,85 @@ export default function ProjectDetailsPage() {
     }
   }, [projectId]);
 
+  // Handle task reorder within group
+  const handleTaskReorder = async (
+    groupId: string,
+    reorderedTasks: Task[],
+  ): Promise<void> => {
+    // Only allow reordering if there are multiple tasks in the group
+    if (reorderedTasks.length <= 1) {
+      return;
+    }
+
+    // Check if order actually changed
+    const originalGroup = taskGroups.find((g) => g.id === groupId);
+    if (
+      !originalGroup ||
+      JSON.stringify(originalGroup.tasks) === JSON.stringify(reorderedTasks)
+    ) {
+      return;
+    }
+
+    setIsReordering(true);
+
+    // Update local state immediately for smooth UI
+    setTaskGroups((prev) =>
+      prev.map((group) =>
+        group.id === groupId ? { ...group, tasks: reorderedTasks } : group,
+      ),
+    );
+
+    try {
+      // Prepare tasks with updated display_order
+      const tasksToUpdate = reorderedTasks.map((task, index) => ({
+        id: task.id,
+        display_order: index,
+        task_group_id: groupId,
+      }));
+
+      // Call reorder API
+      const response = await fetch(
+        `/api/workspace/projects/${projectId}/tasks/reorder`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tasks: tasksToUpdate }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to reorder tasks");
+      }
+
+      setSuccessMessage("Tasks reordered successfully");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      console.error("Error reordering tasks:", err);
+      setError("Failed to reorder tasks");
+
+      // Revert to previous state on error
+      const fetchProjectDetails = async (): Promise<void> => {
+        try {
+          const response = await fetch(
+            `/api/workspace/projects/${projectId}/details`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setTaskGroups(data.taskGroups);
+          }
+        } catch (e) {
+          console.error("Error refetching project:", e);
+        }
+      };
+      fetchProjectDetails();
+    } finally {
+      setIsReordering(false);
+      setDraggedTaskId(null);
+    }
+  };
+
   // Handle task update
-  const handleTaskUpdate = async (task: Task) => {
+  const handleTaskUpdate = async (task: Task): Promise<void> => {
     setIsSaving(true);
     try {
       const response = await fetch(
@@ -154,7 +233,7 @@ export default function ProjectDetailsPage() {
   };
 
   // Handle export
-  const handleExport = async (format: "markdown" | "text") => {
+  const handleExport = async (format: "markdown" | "text"): Promise<void> => {
     try {
       const response = await fetch(
         `/api/workspace/projects/${projectId}/export?format=${format}`,
@@ -183,7 +262,7 @@ export default function ProjectDetailsPage() {
   };
 
   // Handle copy to clipboard
-  const handleCopyToClipboard = async () => {
+  const handleCopyToClipboard = async (): Promise<void> => {
     try {
       const response = await fetch(
         `/api/workspace/projects/${projectId}/export?format=markdown`,
@@ -296,37 +375,44 @@ export default function ProjectDetailsPage() {
         </div>
       </div>
 
+      {/* Floating Notification Banner - Center Top */}
+      <AnimatePresence>
+        {(successMessage || error) && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50"
+          >
+            <div
+              className={`px-6 py-3 rounded-full shadow-lg flex items-center gap-3 backdrop-blur-md border ${
+                error
+                  ? "bg-red-50/95 dark:bg-red-900/30 border-red-200 dark:border-red-800"
+                  : "bg-green-50/95 dark:bg-green-900/30 border-green-200 dark:border-green-800"
+              }`}
+            >
+              {error ? (
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+              ) : (
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+              )}
+              <span
+                className={`text-sm font-medium whitespace-nowrap ${
+                  error
+                    ? "text-red-800 dark:text-red-200"
+                    : "text-green-800 dark:text-green-200"
+                }`}
+              >
+                {successMessage || error}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Success/Error Messages */}
-        <AnimatePresence>
-          {successMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2"
-            >
-              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <span className="text-green-800 dark:text-green-200">
-                {successMessage}
-              </span>
-            </motion.div>
-          )}
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2"
-            >
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-              <span className="text-red-800 dark:text-red-200">{error}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Project Info Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -454,30 +540,83 @@ export default function ProjectDetailsPage() {
                     exit={{ opacity: 0, height: 0 }}
                     className="border-t border-gray-200 dark:border-slate-700 divide-y divide-gray-200 dark:divide-slate-700"
                   >
-                    {group.tasks.map((task, index) => (
-                      <motion.div
-                        key={task.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                    {group.tasks.length > 1 ? (
+                      <Reorder.Group
+                        axis="y"
+                        values={group.tasks}
+                        onReorder={(reorderedTasks: Task[]) =>
+                          handleTaskReorder(group.id, reorderedTasks)
+                        }
                       >
-                        {editingTask?.id === task.id ? (
-                          <TaskEditForm
-                            task={editingTask}
-                            setTask={setEditingTask}
-                            onSave={handleTaskUpdate}
-                            isSaving={isSaving}
-                            onCancel={() => setEditingTask(null)}
-                          />
-                        ) : (
-                          <TaskCard
-                            task={task}
-                            onEdit={() => setEditingTask(task)}
-                          />
-                        )}
-                      </motion.div>
-                    ))}
+                        {group.tasks.map((task, index) => (
+                          <Reorder.Item
+                            key={task.id}
+                            value={task}
+                            onMouseDown={() => setDraggedTaskId(task.id)}
+                            onMouseUp={() => setDraggedTaskId(null)}
+                            onTouchStart={() => setDraggedTaskId(task.id)}
+                            onTouchEnd={() => setDraggedTaskId(null)}
+                          >
+                            <motion.div
+                              layout
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className={`px-6 py-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors cursor-grab active:cursor-grabbing ${
+                                draggedTaskId === task.id
+                                  ? "bg-blue-50 dark:bg-blue-900/10"
+                                  : ""
+                              }`}
+                            >
+                              {editingTask?.id === task.id ? (
+                                <TaskEditForm
+                                  task={editingTask}
+                                  setTask={setEditingTask}
+                                  onSave={handleTaskUpdate}
+                                  isSaving={isSaving}
+                                  onCancel={() => setEditingTask(null)}
+                                />
+                              ) : (
+                                <TaskCard
+                                  task={task}
+                                  onEdit={() => setEditingTask(task)}
+                                  canReorder={true}
+                                  isDragging={draggedTaskId === task.id}
+                                />
+                              )}
+                            </motion.div>
+                          </Reorder.Item>
+                        ))}
+                      </Reorder.Group>
+                    ) : (
+                      // Single task - no reorder ability
+                      group.tasks.map((task, index) => (
+                        <motion.div
+                          key={task.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                        >
+                          {editingTask?.id === task.id ? (
+                            <TaskEditForm
+                              task={editingTask}
+                              setTask={setEditingTask}
+                              onSave={handleTaskUpdate}
+                              isSaving={isSaving}
+                              onCancel={() => setEditingTask(null)}
+                            />
+                          ) : (
+                            <TaskCard
+                              task={task}
+                              onEdit={() => setEditingTask(task)}
+                              canReorder={false}
+                              isDragging={false}
+                            />
+                          )}
+                        </motion.div>
+                      ))
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -490,8 +629,18 @@ export default function ProjectDetailsPage() {
 }
 
 // Task Card Component
-function TaskCard({ task, onEdit }: { task: Task; onEdit: () => void }) {
-  const getPriorityColor = (priority: string) => {
+function TaskCard({
+  task,
+  onEdit,
+  canReorder,
+  isDragging,
+}: {
+  task: Task;
+  onEdit: () => void;
+  canReorder: boolean;
+  isDragging: boolean;
+}): JSX.Element {
+  const getPriorityColor = (priority: string): string => {
     switch (priority) {
       case "high":
         return "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300";
@@ -504,7 +653,7 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: () => void }) {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: string): string => {
     switch (difficulty) {
       case "hard":
         return "text-red-600 dark:text-red-400";
@@ -518,8 +667,25 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: () => void }) {
   };
 
   return (
-    <div className="space-y-3">
+    <motion.div
+      animate={{
+        scale: isDragging ? 1.02 : 1,
+        opacity: isDragging ? 0.8 : 1,
+      }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="space-y-3"
+    >
       <div className="flex items-start justify-between gap-4">
+        {canReorder && (
+          <motion.div
+            whileHover={{ scale: 1.2, color: "#2563eb" }}
+            className="pt-1 flex-shrink-0"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-5 h-5 text-gray-400 hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400 transition-colors" />
+          </motion.div>
+        )}
+
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900 dark:text-white text-base mb-1">
             {task.title}
@@ -559,7 +725,7 @@ function TaskCard({ task, onEdit }: { task: Task; onEdit: () => void }) {
           {task.task_status}
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -576,7 +742,25 @@ function TaskEditForm({
   onSave: (task: Task) => void;
   isSaving: boolean;
   onCancel: () => void;
-}) {
+}): JSX.Element {
+  const handlePriorityChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ): void => {
+    setTask({ ...task, priority: e.target.value as Task["priority"] });
+  };
+
+  const handleDifficultyChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ): void => {
+    setTask({ ...task, difficulty: e.target.value as Task["difficulty"] });
+  };
+
+  const handleStatusChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ): void => {
+    setTask({ ...task, task_status: e.target.value });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -614,9 +798,7 @@ function TaskEditForm({
           </label>
           <select
             value={task.priority}
-            onChange={(e) =>
-              setTask({ ...task, priority: e.target.value as any })
-            }
+            onChange={handlePriorityChange}
             className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg px-2 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="low">Low</option>
@@ -631,9 +813,7 @@ function TaskEditForm({
           </label>
           <select
             value={task.difficulty}
-            onChange={(e) =>
-              setTask({ ...task, difficulty: e.target.value as any })
-            }
+            onChange={handleDifficultyChange}
             className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg px-2 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="easy">Easy</option>
@@ -648,7 +828,7 @@ function TaskEditForm({
           </label>
           <select
             value={task.task_status}
-            onChange={(e) => setTask({ ...task, task_status: e.target.value })}
+            onChange={handleStatusChange}
             className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg px-2 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="todo">To Do</option>
