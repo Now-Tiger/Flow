@@ -40,32 +40,6 @@ export async function POST(request: NextRequest) {
     // Generate project title
     const projectTitle = featureGoal.substring(0, 100).trim();
 
-    // Create project first
-    const { data: project, error: projectError } = await supabaseClient
-      .from("projects")
-      .insert([
-        {
-          user_id: userId,
-          title: projectTitle,
-          description: featureGoal,
-          target_users: targetUsers,
-          constraints: constraints,
-          template_type: templateType || "Web Application",
-          status: "draft",
-        },
-      ])
-      .select();
-
-    if (projectError || !project || project.length === 0) {
-      console.error("Project creation error:", projectError);
-      return NextResponse.json(
-        { error: "Failed to create project" },
-        { status: 500 },
-      );
-    }
-
-    const projectId = project[0].id;
-
     // Prompt setup
     const prompt = `You are an expert task breakdown specialist. Given a feature idea, break it down into actionable items.
 
@@ -119,11 +93,34 @@ Important:
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError);
       console.error("Raw response:", text);
+      return NextResponse.json({ error: "Failed to parse task generation response" }, { status: 500 });
+    }
+
+    // Create project first
+    const { data: project, error: projectError } = await supabaseClient
+      .from("projects")
+      .insert([
+        {
+          user_id: userId,
+          title: projectTitle,
+          description: featureGoal,
+          target_users: targetUsers,
+          constraints: constraints,
+          template_type: templateType || "Web Application",
+          status: "draft",
+        },
+      ])
+      .select();
+
+    if (projectError || !project || project.length === 0) {
+      console.error("Project creation error:", projectError);
       return NextResponse.json(
-        { error: "Failed to parse task generation response" },
+        { error: "Failed to create project" },
         { status: 500 },
       );
     }
+
+    const projectId = project[0].id;
 
     // Create task groups based on type
     const groupsByType: Record<string, string> = {};
